@@ -1,10 +1,6 @@
-version: '3.8'
-
 services:
   front:
-    build:
-      context: ../p9_microcrm_front
-      dockerfile: Dockerfile
+    image: ghcr.io/mathador/p9_microcrm_front:main
     ports:
       - "80:80"
       - "443:443"
@@ -14,9 +10,7 @@ services:
       - microcrm-network
 
   back:
-    build:
-      context: ../p9_microcrm_back
-      dockerfile: Dockerfile
+    image: ghcr.io/mathador/p9_microcrm_back:main
     ports:
       - "8080:8080"
     networks:
