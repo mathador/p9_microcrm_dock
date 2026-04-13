@@ -12,6 +12,14 @@ Ce répertoire contient la configuration Docker Compose pour orchestrer le dépl
 Pour démarrer l'ensemble des services (Frontend et Backend) :
 
 ```bash
+docker-compose up
+```
+ou
+```bash
+docker-compose up --build
+```
+ou
+```bash
 docker-compose up --build -d
 ```
 
