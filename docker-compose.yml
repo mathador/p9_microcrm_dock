@@ -49,6 +49,8 @@ services:
       - "9600:9600"
     depends_on:
       - elasticsearch
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
       - ./observability/logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
     networks:
