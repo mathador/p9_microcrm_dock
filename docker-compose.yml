@@ -51,6 +51,7 @@ services:
       - elasticsearch
     environment:
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - SONAR_TOKEN=${SONAR_TOKEN}
     volumes:
       - ./observability/logstash/pipeline/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
     networks:

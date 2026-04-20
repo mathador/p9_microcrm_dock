@@ -53,30 +53,22 @@ Les logs des conteneurs `front` et `back` sont envoyés à Logstash via GELF, pu
 
 Le projet intègre aussi une pile ELK (Elasticsearch, Logstash, Kibana) pour centraliser les logs applicatifs et suivre les métriques **DORA** (Deployment Frequency, Lead Time for Changes, etc.) en interrogeant l'API GitHub Actions.
 
-### Configuration des Métriques DORA
+### Configuration des Métriques (GitHub & SonarCloud)
 
-Pour que Logstash puisse récupérer les données de vos workflows GitHub (`p9_microcrm_front` et `p9_microcrm_back`), suivez ces étapes :
+Pour que Logstash puisse récupérer les données, configurez votre fichier `.env` :
 
-1.  **Générer un Personal Access Token (PAT) GitHub** :
-    *   Allez dans vos paramètres GitHub : **Settings > Developer settings > Personal access tokens > Tokens (classic)**.
-    *   Créez un nouveau jeton (`Generate new token`).
-    *   Sélectionnez le scope **`repo`** (nécessaire pour lire l'historique des workflows).
-    *   Copiez le jeton généré.
+1.  **GITHUB_TOKEN** : [Générer un PAT (classic)](https://github.com/settings/tokens) avec le scope `repo`.
+2.  **SONAR_TOKEN** : Générer un token sur [SonarCloud](https://sonarcloud.io/account/security/).
 
-2.  **Configurer la variable d'environnement** :
-    *   Créez un fichier `.env` à la racine du projet (s'il n'existe pas).
-    *   Ajoutez votre jeton : `GITHUB_TOKEN=votre_jeton_ici`.
+Exemple de fichier `.env` :
+```env
+GITHUB_TOKEN=ghp_xxxx
+SONAR_TOKEN=squ_xxxx
+```
 
-3.  **Lancer la stack** :
-    ```bash
-    docker-compose up -d
-    ```
+### KPIs disponibles dans Kibana
 
-### Visualisation dans Kibana
-
-1.  **Logs applicatifs** : Créez une Data View avec le pattern `microcrm-logs-*`.
-2.  **Métriques DORA** : Créez une Data View avec le pattern `dora-metrics-*` et utilisez le champ `created_at` comme timestamp.
-3.  **Indicateurs DORA suggérés** :
-    *   **Deployment Frequency** : Nombre de documents avec `conclusion: success`.
-    *   **Lead Time for Changes** : Moyenne du champ `duration_seconds` pour les succès.
-    *   **Change Failure Rate** : Ratio des documents avec `conclusion: failure` par rapport au total.
+*   **Lead Time for Changes** : Via l'index `dora-metrics-*` (champ `duration_seconds` ou `lead_time_for_changes_human`).
+*   **Temps de Build / Tests** : Basé sur la durée totale des workflows GitHub Actions.
+*   **Dette Technique** : Via l'index `sonar-metrics-*` (champ `technical_debt_hours`).
+*   **Taux d'erreurs Logs** : Via l'index `microcrm-logs-*`. Utilisez le champ `is_error` (1 pour erreur, 0 pour succès) pour calculer le ratio.
