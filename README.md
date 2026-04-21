@@ -122,3 +122,68 @@ docker compose exec elasticsearch /usr/share/elasticsearch/bin/elasticsearch-ser
 ```
 
 Copiez la valeur retournee (apres `=`) dans `ELASTICSEARCH_SERVICEACCOUNTTOKEN` du `.env`.
+
+
+### Diagramme archi
+
+```mermaid
+
+flowchart TD
+    subgraph GitHub["📦 GitHub (Code & CI/CD)"]
+        Dev[👨‍💻 Développeur] -->|push / PR| RepoFront["Repo Frontend (Angular)"]
+        Dev -->|push / PR| RepoBack["Repo Backend (Spring Boot)"]
+        RepoFront -->|déclenche| GH_Front[".github/workflows/main.yml
+        (Frontend CI)"]
+        RepoBack -->|déclenche| GH_Back[".github/workflows/main.yml
+        (Backend CI)"]
+    end
+
+    subgraph CI_CD["⚙️ Pipeline CI/CD (GitHub Actions)"]
+        GH_Front -->|build & test| TestFront["npm test + lint"]
+        GH_Front -->|analyse| SonarFront["SonarCloud Scan
+        (frontend)"]
+        GH_Front -->|build image| DockerFront["Docker build
+        (multi-stage)"]
+        DockerFront -->|push| GHCR["GHCR
+        (GitHub Container Registry)"]
+
+        GH_Back -->|build & test| TestBack["./gradlew test + jacoco"]
+        GH_Back -->|analyse| SonarBack["SonarCloud Scan
+        (backend)"]
+        GH_Back -->|build image| DockerBack["Docker build
+        (multi-stage)"]
+        DockerBack -->|push| GHCR
+    end
+
+    subgraph Deploy["🐳 Déploiement (Docker Compose)"]
+        ComposeFile["docker-compose.yml"] -->|pull images| GHCR
+        ComposeFile -->|services| FrontSvc["Service front
+        (port 80/443)"]
+        ComposeFile -->|services| BackSvc["Service back
+        (port 8080)"]
+        ComposeFile -->|services| ELK["Stack ELK
+        (Elasticsearch, Logstash, Kibana)"]
+    end
+
+    subgraph Observability["📊 Observabilité & Monitoring"]
+        FrontSvc -->|logs GELF| Logstash
+        BackSvc -->|logs GELF| Logstash
+        Logstash["Logstash
+        (parse / enrich)"] -->|index| ES["Elasticsearch
+        (microcrm-logs-*)"]
+        ES -->|requêtes| Kibana["Kibana
+        (Dashboards DORA & KPIs)"]
+        Kibana -->|alertes| Alert["Notifications
+        (Slack / Email, non implémenté)"]
+    end
+
+    subgraph Metrics["📈 Métriques DORA"]
+        GH_Back -->|API GitHub| MetricsCalc["Lead Time / Deployment Freq.
+        MTTR / Change Failure Rate"]
+        GH_Front -->|API GitHub| MetricsCalc
+        MetricsCalc -->|affichage| Kibana
+    end
+
+    SonarFront -->|Quality Gate| GH_Front
+    SonarBack -->|Quality Gate| GH_Back
+```
