@@ -30,7 +30,21 @@ docker-compose up --build -d
 docker compose down
 ```
 
-## Accès
+## Sauvegarde et restauration des volumes
+
+### Restauration du volume Elasticsearch
+
+Après avoir arrêté le stack :
+
+```bash
+docker-compose down
+```
+
+Puis redémarrez :
+
+```bash
+docker-compose up -d
+```
 
 - Frontend : `http://localhost:80`
 - Backend : `http://localhost:8080`
@@ -72,3 +86,39 @@ SONAR_TOKEN=squ_xxxx
 *   **Temps de Build / Tests** : Basé sur la durée totale des workflows GitHub Actions.
 *   **Dette Technique** : Via l'index `sonar-metrics-*` (champ `technical_debt_hours`).
 *   **Taux d'erreurs Logs** : Via l'index `microcrm-logs-*`. Utilisez le champ `is_error` (1 pour erreur, 0 pour succès) pour calculer le ratio.
+
+
+## Pour sauvegarder le volume:
+
+```bash
+docker run --rm -v elasticsearch-data:/volume -v ${PWD}:/backup node:20-alpine sh -c "cd /volume && tar czf /backup/elasticsearch-data-backup.tar.gz ."
+```
+
+## Pour restaurer le volume:
+
+
+```bash
+docker run --rm -v elasticsearch-data:/volume -v ${PWD}:/backup node:20-alpine sh -c "cd /volume && tar xzf /backup/elasticsearch-data-backup.tar.gz"
+```
+
+## Configuration Kibana (.env)
+
+Kibana utilise un **service account token** et des cles de chiffrement stables.
+Ajoutez ces variables dans votre fichier `.env` :
+
+```env
+ELASTICSEARCH_SERVICEACCOUNTTOKEN=eyJ2ZXIiOiI4LjE0LjMiLCJhZHIiOlsiLi4uIl0sImZsciI6Ii4uLiJ9...
+KIBANA_SECURITY_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef
+KIBANA_ENCRYPTEDSAVEDOBJECTS_ENCRYPTION_KEY=abcdef0123456789abcdef0123456789
+KIBANA_REPORTING_ENCRYPTION_KEY=fedcba9876543210fedcba9876543210
+```
+
+Les 3 cles Kibana doivent faire au moins 32 caracteres.
+
+Pour generer/regenerer un token valide :
+
+```bash
+docker compose exec elasticsearch /usr/share/elasticsearch/bin/elasticsearch-service-tokens create elastic/kibana kibana-token
+```
+
+Copiez la valeur retournee (apres `=`) dans `ELASTICSEARCH_SERVICEACCOUNTTOKEN` du `.env`.

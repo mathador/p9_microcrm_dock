@@ -1,0 +1,13 @@
+server.name: kibana
+server.host: "0.0.0.0"
+
+elasticsearch.hosts: ["http://elasticsearch:9200"]
+elasticsearch.serviceAccountToken: "${ELASTICSEARCH_SERVICEACCOUNTTOKEN}"
+
+# Stabilise les sessions/chiffrements entre redemarrages
+xpack.security.encryptionKey: "${KIBANA_SECURITY_ENCRYPTION_KEY:0123456789abcdef0123456789abcdef}"
+xpack.encryptedSavedObjects.encryptionKey: "${KIBANA_ENCRYPTEDSAVEDOBJECTS_ENCRYPTION_KEY:abcdef0123456789abcdef0123456789}"
+xpack.reporting.encryptionKey: "${KIBANA_REPORTING_ENCRYPTION_KEY:fedcba9876543210fedcba9876543210}"
+
+# Evite l'avertissement de cookie non securise en environnement local
+xpack.security.secureCookies: false
